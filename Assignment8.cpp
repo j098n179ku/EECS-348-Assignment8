@@ -1,11 +1,11 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <algorithm>
-#include <iomanip>
-#include <map>
-#include <ctime>
+#include <iostream> //input and output library for user inputs and outputs and cout commands
+#include <vector> //library for allowing the use of vectors
+#include <string> //library to allow saving strings into variables
+#include <sstream> //this uses strings as streams so it can parse strings as inputs
+#include <algorithm>//algorithms gives access to the find and sort commands for c++
+#include <iomanip>//iomanip is a maniopulation header to maniupulate iostream input and output
+#include <map> //map will be used to connect strings to integers using the map command
+#include <ctime> //library that can be used for a bunch of time based functions, structs, and other stuff
 #include <fstream> //A Needed to add fstream to fix error: variable ‘std::ifstream infile’ has initializer but incomplete type
 using namespace std; //makes it so printing strings dont requite std:: before cout so code can be written faster
 
@@ -15,18 +15,22 @@ bool is_read = false; //A Added this is_read boolean so READ doesnt discard emai
     Code written by chatgpt
     The parsedata fucntion was made to convert a string
     into a time_t datatype, which uses dates and time. this
-    will be used to
+    will be used to determine when the email was sent. the more recent the email,
+    the higher priority it has
 */
-// Convert MM-DD-YYYY to time_t for easy comparison
 time_t parseDate(const string& dateStr) { //initializes a data parser function to turn the date string into a time_t data type so that way the day it was sent can be compared
-    struct tm tm{};
+    struct tm tm{}; //this struct is used to create calender dates, and is broken up into a bunch of attributes like year, month, and day
     sscanf(dateStr.c_str(), "%d-%d-%d", &tm.tm_mon, &tm.tm_mday, &tm.tm_year);
-    tm.tm_mon -= 1;           // struct tm months start from 0
-    tm.tm_year -= 1900;       // struct tm years are since 1900
-    return mktime(&tm);
+    tm.tm_mon -= 1; //for month, because it starts at 0, the month entered and parsed through needs to be subtracted by 1
+    tm.tm_year -= 1900; //this designates a year since 1900, so it needs to subtract the year by 1900 to get the proper year
+    return mktime(&tm); //returns the full date struct as a whole so it can be compared to other dates
 }
 
-// Map sender category to priority
+/*
+    this code was all chat gpt given for the eecs 348 assignment 8
+    this mapping function takes the string and maps it to have an equivalent integer
+    according to C++ documentation, map pairs two values together kind of like a dictionary, where a number gets tied to a string
+*/
 map<string, int> senderPriority = { //map in order to equate strings to an integer. the higher the string priority, the higher the integer value, which mneans higher priority
     {"Boss", 5},//the string Boss has the highest priority, and will have the highest integer out of all the possible senders
     {"Subordinate", 4},//subordinate is the second highest priority, so it will have the second highest integer
@@ -53,8 +57,8 @@ public: //public facing values and functions of the email class
 
     // Compare by priority
     bool operator>(const Email& other) const {
-        if (senderPriority[senderCategory] != senderPriority[other.senderCategory])
-            return senderPriority[senderCategory] > senderPriority[other.senderCategory];
+        if (senderPriority[senderCategory] != senderPriority[other.senderCategory]) //if the sender categories are not the same
+            return senderPriority[senderCategory] > senderPriority[other.senderCategory]; //return whichever
         if (date != other.date)
             return date > other.date;
         return arrivalOrder < other.arrivalOrder; // newer (lower arrivalOrder) is higher priority
@@ -126,11 +130,11 @@ public:
 
 class EmailManager {
 private:
-    MaxHeap heap;
-    bool hasCurrent = false;
-    Email currentEmail = Email("", "", "01-01-2000");
+    MaxHeap heap; //initializes a new instance of the heap to store emails
+    bool hasCurrent = false; //this boolean checks to make sure that there is a current email that is available to be looked at by the program
+    Email currentEmail = Email("", "", "01-01-2000"); //this is a placeholder dummy email just in case the next function is called.
 
-public:
+public: //this is all the publically facing attributes and functions
     void processLine(const string& line) {
         if (line.rfind("EMAIL ", 0) == 0) {
             string rest = line.substr(6);
@@ -154,30 +158,30 @@ public:
                     hasCurrent = true;
                 }
             }
-            if (hasCurrent) {
-                cout << "Next email:" << endl;
-                currentEmail.display();
-                is_read = true;
-                cout << endl;
+            if (hasCurrent) {//hascurrent variable is used to make sure that there is an email being looked at by the program, 
+                cout << "Next email:" << endl;//lets the user know that the next email is being printed out
+                currentEmail.display(); //calls the function to display the current email
+                is_read = true; //A sets the is_read to be true so the email can be discarded
+                cout << endl; //end line to make a new line
             } else {
-                cout << "No emails to read.\n" << endl;
+                cout << "No emails to read.\n" << endl; //let the user know that there are no emails to be read
             }
-        } else if (line.find("READ") != string::npos) { //A
+        } else if (line.find("READ") != string::npos) { //A If the word READ is in the line
         //D } else if (line == "READ") {
-            if (is_read == false) //A 
+            if (is_read == false) //A If the email hasnt been read yet, then it shouldnt be discarded
             {//A
-                cout << "email not read yet. \n" << endl; //A
+                cout << "email not read yet. \n" << endl; //A Let the user know that the email wasnt discarded
             }//A
-            else //A
+            else //A Otherwise, if it has been read
             {
-                if (hasCurrent) {
-                    heap.pop();
-                    hasCurrent = false;
-                } else if (!heap.empty()) {
-                    heap.pop();
+                if (hasCurrent) { //if the hascurrent boolean is true, that means there is a current node being looked at
+                    heap.pop();//attempts to pop the node to remove the email from the top
+                    hasCurrent = false; //sets hascurrent to false because there wont be a new 
+                } else if (!heap.empty()) { //if the heap is not empty, then pop the node
+                    heap.pop(); //calls the pop function for the initialized heap object to get rid of the email at the top of the heap
                 }
-                is_read = false;//A
-            }
+                is_read = false;//A sets is_read to false so the next email doesnt get discarded before its looked at
+            }//A
 
         }
     }
@@ -189,7 +193,6 @@ public:
     nothing in this block of code needed to be changed or modified
     during bug testing, and works as intended
 */
-// Read from a file
 void runFromFile(const string& filename) {//initializes the function that will handle opening the file and passing the information to get the line from the file
     ifstream infile(filename);//command from fstream that opens up the file
     string line; //initializes a line variable that the line of the file will be tied to so the data has a place to be
